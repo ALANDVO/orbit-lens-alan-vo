@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "name": "orbit-lens-alan-vo",
+  "owner": "ALANDVO",
+  "email": "alanvo@gmail.com",
+  "domain": "AI/ML developer tools",
+  "summary": "Work in progress: orbit-lens-alan-vo",
+  "workflows": [
+    "Create and execute multi-phase security audit runs with configurable profiles (Quick, Standard, Deep)",
+    "Review and filter verified findings with severity, attack class, and evidence artifacts",
+    "Export audit results as JSON or SARIF 2.1.0 for CI/CD pipeline integration"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "status": "work-in-progress"
+}
