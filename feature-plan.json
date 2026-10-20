@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "current_feature": "auth-oidc",
+  "features": [
+    {
+      "id": "project-skeleton",
+      "title": "Project skeleton with FastAPI backend and React frontend",
+      "status": "done",
+      "acceptance": [
+        "FastAPI app runs with health endpoint",
+        "React + Vite frontend builds and serves",
+        "SQLite database with migrations",
+        "Dockerfiles for backend and frontend",
+        "docker-compose.yml with Keycloak",
+        "Basic project structure matches contract"
+      ],
+      "implementation": [
+        "backend/app/main.py",
+        "backend/app/core/config.py",
+        "backend/app/core/database.py",
+        "backend/app/models/__init__.py",
+        "backend/app/api/__init__.py",
+        "backend/app/services/__init__.py",
+        "backend/requirements.txt",
+        "frontend/package.json",
+        "frontend/tsconfig.json",
+        "frontend/vite.config.ts",
+        "frontend/src/main.tsx",
+        "frontend/src/App.tsx",
+        "frontend/src/api/client.ts",
+        "Dockerfile.backend",
+        "Dockerfile.frontend",
+        "docker-compose.yml",
+        ".env.example",
+        ".gitignore"
+      ],
+      "tests": [
+        "backend/tests/test_health.py",
+        "frontend/src/App.test.tsx"
+      ]
+    },
+    {
+      "id": "auth-oidc",
+      "title": "OIDC authentication with Keycloak (PKCE flow)",
+      "status": "planned",
+      "acceptance": [
+        "Login/logout works via Keycloak",
+        "Tokens validated with signature/issuer/audience checks",
+        "Role-based access control (viewer/analyst/admin)",
+        "Session management with HttpOnly cookies",
+        "CSRF protection on state-changing operations"
+      ],
+      "implementation": [
+        "backend/app/core/auth.py",
+        "backend/app/api/auth.py",
+        "backend/app/models/user.py",
+        "frontend/src/auth/",
+        "keycloak/realm-import.json"
+      ],
+      "tests": [
+        "backend/tests/test_auth.py",
+        "frontend/src/auth/AuthContext.test.tsx"
+      ]
+    },
+    {
+      "id": "audit-domain-engine",
+      "title": "Multi-phase security audit domain engine",
+      "status": "planned",
+      "acceptance": [
+        "Audit run creation with target specification",
+        "Multi-phase execution (recon, hunting, validation, reporting)",
+        "Coverage ledger tracking",
+        "Findings with evidence artifacts",
+        "Deterministic offline core (no LLM required)"
+      ],
+      "implementation": [
+        "backend/app/models/audit.py",
+        "backend/app/services/audit_engine.py",
+        "backend/app/services/coverage.py",
+        "backend/app/api/audit.py",
+        "backend/app/services/validators.py"
+      ],
+      "tests": [
+        "backend/tests/test_audit_engine.py",
+        "backend/tests/test_coverage.py"
+      ]
+    },
+    {
+      "id": "audit-workflows",
+      "title": "Three complete audit workflows",
+      "status": "planned",
+      "acceptance": [
+        "Quick audit profile (single hunter wave)",
+        "Standard audit profile (multi-phase with verification)",
+        "Deep audit profile (carried records, extended hunting)",
+        "Export/import of audit runs"
+      ],
+      "implementation": [
+        "backend/app/services/profiles.py",
+        "backend/app/api/workflows.py",
+        "frontend/src/components/audit/",
+        "frontend/src/pages/AuditDashboard.tsx"
+      ],
+      "tests": [
+        "backend/tests/test_workflows.py",
+        "frontend/src/pages/AuditDashboard.test.tsx"
+      ]
+    },
+    {
+      "id": "llm-integration",
+      "title": "LLM provider adapters (optional advisory explanations)",
+      "status": "planned",
+      "acceptance": [
+        "OpenAI-compatible adapter",
+        "Anthropic messages adapter",
+        "Gemini generateContent adapter",
+        "Ollama adapter",
+        "Configurable provider/model/endpoint",
+        "Keys server-side only, redacted errors"
+      ],
+      "implementation": [
+        "backend/app/services/llm_adapters.py",
+        "backend/app/core/llm_config.py",
+        "backend/app/api/llm.py"
+      ],
+      "tests": [
+        "backend/tests/test_llm_adapters.py"
+      ]
+    },
+    {
+      "id": "frontend-dashboard",
+      "title": "React dashboard with audit workflows",
+      "status": "planned",
+      "acceptance": [
+        "Audit dashboard with create/import/search/detail/export",
+        "Loading/error/empty states",
+        "Typed API client from backend routes",
+        "Real-time progress updates",
+        "Responsive professional UI"
+      ],
+      "implementation": [
+        "frontend/src/pages/",
+        "frontend/src/components/",
+        "frontend/src/hooks/"
+      ],
+      "tests": [
+        "frontend/src/pages/*.test.tsx"
+      ]
+    },
+    {
+      "id": "docs-and-ci",
+      "title": "Documentation, CI/CD, and portfolio.json",
+      "status": "planned",
+      "acceptance": [
+        "README with install/run/test steps, Mermaid diagram",
+        "CHANGELOG.md",
+        "portfolio.json with required fields",
+        "LICENSE MIT",
+        "GitHub Actions CI workflow",
+        "API docs",
+        "All tests pass"
+      ],
+      "implementation": [
+        "README.md",
+        "CHANGELOG.md",
+        "portfolio.json",
+        "LICENSE",
+        ".github/workflows/ci.yml",
+        "docs/"
+      ],
+      "tests": [
+        "Full test suite passes"
+      ]
+    }
+  ]
+}

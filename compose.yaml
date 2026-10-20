@@ -1,0 +1,74 @@
+# Orbit Lens Docker Compose
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: orbit-lens-keycloak
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/realm-import.json:/opt/keycloak/data/import/realm-import.json
+      - keycloak_data:/opt/keycloak/data
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: orbit-lens-backend
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:///./orbit_lens.db
+      OIDC_ISSUER_URL: http://keycloak:8080/realms/orbit-lens
+      OIDC_CLIENT_ID: orbit-lens
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: http://127.0.0.1:3000/callback
+      OIDC_SCOPES: openid profile email roles
+      CORS_ORIGINS: '["http://127.0.0.1:3000", "http://localhost:3000"]'
+      SECRET_KEY: ${SECRET_KEY:-}
+      ENVIRONMENT: development
+      DEBUG: "true"
+    volumes:
+      - backend_data:/app/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: orbit-lens-frontend
+    environment:
+      VITE_API_BASE_URL: http://127.0.0.1:8000/api/v1
+      VITE_OIDC_ISSUER: http://127.0.0.1:8080/realms/orbit-lens
+      VITE_OIDC_CLIENT_ID: orbit-lens
+      VITE_OIDC_REDIRECT_URI: http://127.0.0.1:3000/callback
+      VITE_OIDC_SCOPES: openid profile email roles
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  keycloak_data:
+  backend_data:
