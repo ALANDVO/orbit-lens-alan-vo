@@ -5,7 +5,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.main import app
 from httpx import AsyncClient
-from app.api.auth import create_access_token, reset_oidc_cache
+from app.core.auth import create_access_token, reset_oidc_cache
 from app.models import User, UserRole
 from app.core.config import settings
 

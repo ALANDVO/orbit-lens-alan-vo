@@ -12,116 +12,19 @@ import uuid
 from app.core.config import settings
 from app.core.database import get_db
 from app.models import User, UserRole
+from app.core.auth import (
+    create_access_token,
+    create_refresh_token,
+    verify_oidc_token,
+    verify_refresh_token,
+    security,
+    reset_oidc_cache,
+)
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer(auto_error=False)
-
-# OIDC configuration cache
-_oidc_config: dict = {}
-_jwks: dict = {}
-
-
-def reset_oidc_cache() -> None:
-    global _oidc_config, _jwks
-    _oidc_config = {}
-    _jwks = {}
-
-
-def is_test_mode() -> bool:
-    result = settings.ENVIRONMENT == "test" or settings.DEBUG
-    print(f"DEBUG is_test_mode: {result}, ENVIRONMENT={settings.ENVIRONMENT}, DEBUG={settings.DEBUG}")
-    return result
-
-
-async def get_oidc_config() -> dict:
-    global _oidc_config
-    if not _oidc_config:
-        if is_test_mode():
-            print("DEBUG get_oidc_config: returning test config")
-            return {"jwks_uri": ""}
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(f"{settings.OIDC_ISSUER_URL}/.well-known/openid-configuration")
-            resp.raise_for_status()
-            _oidc_config = resp.json()
-    return _oidc_config
-
-
-async def get_jwks() -> dict:
-    global _jwks
-    if not _jwks:
-        if is_test_mode():
-            print("DEBUG get_jwks: returning empty keys")
-            return {"keys": []}
-        config = await get_oidc_config()
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(config["jwks_uri"])
-            resp.raise_for_status()
-            _jwks = resp.json()
-    return _jwks
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc), "type": "access"})
-    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
-
-def create_refresh_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc), "type": "refresh"})
-    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
-
-async def verify_token(token: str) -> dict:
-    try:
-        if is_test_mode():
-            print(f"DEBUG verify_token: test mode, decoding with local secret")
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-            print(f"DEBUG verify_token: payload={payload}")
-            return payload
-        print("DEBUG verify_token: not test mode")
-        jwks = await get_jwks()
-        unverified_header = jwt.get_unverified_header(token)
-        kid = unverified_header.get("kid")
-        if not kid:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token header")
-
-        key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
-        if not key:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token key")
-
-        from jose.utils import base64url_decode
-        from cryptography.hazmat.primitives.asymmetric import rsa
-        from cryptography.hazmat.primitives import serialization
-
-        public_key = rsa.RSAPublicNumbers(
-            e=int.from_bytes(base64url_decode(key["e"]), "big"),
-            n=int.from_bytes(base64url_decode(key["n"]), "big"),
-        ).public_key()
-
-        pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
-
-        payload = jwt.decode(
-            token,
-            pem,
-            algorithms=["RS256"],
-            audience=settings.OIDC_CLIENT_ID,
-            issuer=settings.OIDC_ISSUER_URL,
-        )
-        return payload
-    except JWTError as e:
-        print(f"DEBUG verify_token: JWTError: {e}")
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token validation failed: {e}")
-
-
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db),
@@ -129,18 +32,17 @@ async def get_current_user(
     if not credentials:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
-    payload = await verify_token(credentials.credentials)
-    keycloak_id = payload.get("sub")
-    print(f"DEBUG get_current_user: keycloak_id from payload sub = {keycloak_id}")
-    # The payload has both 'sub' (user ID) and 'keycloak_id' - use keycloak_id
+    try:
+        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
     keycloak_id = payload.get("keycloak_id") or payload.get("sub")
-    print(f"DEBUG get_current_user: using keycloak_id = {keycloak_id}")
     if not keycloak_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
     result = await db.execute(select(User).where(User.keycloak_id == keycloak_id))
     user = result.scalar_one_or_none()
-    print(f"DEBUG get_current_user: user found = {user is not None}")
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     if not user.is_active:
@@ -161,6 +63,24 @@ async def get_current_user_optional(
         return None
 
 
+@router.get("/login")
+async def login():
+    from app.core.auth import get_oidc_config
+    config = await get_oidc_config()
+    return {
+        "authorization_endpoint": config.get("authorization_endpoint", ""),
+        "client_id": settings.OIDC_CLIENT_ID,
+        "redirect_uri": settings.OIDC_REDIRECT_URI,
+        "scopes": settings.OIDC_SCOPES.split(),
+    }
+
+
+class TokenExchangeRequest(BaseModel):
+    code: str
+    code_verifier: str
+    redirect_uri: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -177,24 +97,12 @@ class UserResponse(BaseModel):
     is_active: bool
 
 
-@router.get("/login")
-async def login():
-    config = await get_oidc_config()
-    return {
-        "authorization_endpoint": config.get("authorization_endpoint", ""),
-        "client_id": settings.OIDC_CLIENT_ID,
-        "redirect_uri": settings.OIDC_REDIRECT_URI,
-        "scopes": settings.OIDC_SCOPES.split(),
-    }
-
-
 @router.post("/token", response_model=TokenResponse)
 async def token_exchange(
-    code: str,
-    code_verifier: str,
-    redirect_uri: str,
+    request: TokenExchangeRequest,
     db: AsyncSession = Depends(get_db),
 ):
+    from app.core.auth import get_oidc_config
     config = await get_oidc_config()
     async with httpx.AsyncClient() as client:
         resp = await client.post(
@@ -203,9 +111,9 @@ async def token_exchange(
                 "grant_type": "authorization_code",
                 "client_id": settings.OIDC_CLIENT_ID,
                 "client_secret": settings.OIDC_CLIENT_SECRET,
-                "code": code,
-                "redirect_uri": redirect_uri,
-                "code_verifier": code_verifier,
+                "code": request.code,
+                "redirect_uri": request.redirect_uri,
+                "code_verifier": request.code_verifier,
             },
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -214,13 +122,13 @@ async def token_exchange(
         tokens = resp.json()
 
     access_token = tokens["access_token"]
-    payload = await verify_token(access_token)
+    payload = await verify_oidc_token(access_token)
 
     keycloak_id = payload.get("sub")
     email = payload.get("email")
     username = payload.get("preferred_username", email)
     full_name = payload.get("name")
-    roles = payload.get("roles", [])
+    roles = payload.get("realm_access", {}).get("roles", [])
 
     result = await db.execute(select(User).where(User.keycloak_id == keycloak_id))
     user = result.scalar_one_or_none()
@@ -264,12 +172,7 @@ async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),
 ):
-    try:
-        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        if payload.get("type") != "refresh":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    payload = verify_refresh_token(credentials.credentials)
 
     user_id = payload.get("sub")
     keycloak_id = payload.get("keycloak_id")
@@ -313,3 +216,5 @@ async def auth_config():
         "redirect_uri": settings.OIDC_REDIRECT_URI,
         "scopes": settings.OIDC_SCOPES.split(),
     }
+
+

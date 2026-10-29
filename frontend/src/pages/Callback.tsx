@@ -23,31 +23,28 @@ export function Callback() {
     const exchangeCode = async () => {
       try {
         const oidcIssuer = import.meta.env.VITE_OIDC_ISSUER || 'http://127.0.0.1:8080/realms/orbit-lens'
-        const clientId = import.meta.env.VITE_OIDC_CLIENT_ID || 'orbit-lens'
         const redirectUri = import.meta.env.VITE_OIDC_REDIRECT_URI || 'http://127.0.0.1:3000/callback'
 
-        const tokenResponse = await fetch(`${oidcIssuer}/protocol/openid-connect/token`, {
+        // Exchange code via backend which validates OIDC token and returns internal tokens
+        const tokenResponse = await fetch('/api/v1/auth/token', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            client_id: clientId,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             code,
+            code_verifier: codeVerifier,
             redirect_uri: redirectUri,
-            code_verifier: codeVerifier || '',
           }),
         })
 
         if (!tokenResponse.ok) {
           const error = await tokenResponse.json()
-          throw new Error(error.error_description || 'Token exchange failed')
+          throw new Error(error.detail || 'Token exchange failed')
         }
 
-        const tokens = await tokenResponse.json()
-        sessionStorage.setItem('access_token', tokens.access_token)
-        if (tokens.refresh_token) {
-          sessionStorage.setItem('refresh_token', tokens.refresh_token)
-        }
+        const data = await tokenResponse.json()
+        sessionStorage.setItem('access_token', data.access_token)
+        // Backend doesn't return refresh token in response (stored server-side or not exposed)
+        // For now we just use the access token
 
         sessionStorage.removeItem('oauth_state')
         sessionStorage.removeItem('code_verifier')

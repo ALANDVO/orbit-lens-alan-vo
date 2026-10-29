@@ -2,7 +2,11 @@
   "name": "orbit-lens-frontend",
   "version": "1.0.0",
   "description": "Frontend for Orbit Lens - Multi-phase security audit skill",
-  "author": "Alan Vo <alanvo@gmail.com>",
+  "author": {
+    "name": "Alan Vo",
+    "email": "alanvo@gmail.com",
+    "url": "https://github.com/ALANDVO"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
