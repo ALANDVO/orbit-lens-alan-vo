@@ -59,3 +59,4 @@ coverage/
 *.pem
 *.key
 *.crt
+venv/

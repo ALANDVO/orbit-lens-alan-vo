@@ -26,7 +26,7 @@ Tests: `backend/tests/test_health.py`, `frontend/src/App.test.tsx`
 
 ### auth-oidc — OIDC authentication with Keycloak (PKCE flow)
 
-Status: planned
+Status: in_progress
 
 Acceptance:
 - Login/logout works via Keycloak
@@ -35,9 +35,9 @@ Acceptance:
 - Session management with HttpOnly cookies
 - CSRF protection on state-changing operations
 
-Implementation: `backend/app/core/auth.py`, `backend/app/api/auth.py`, `backend/app/models/user.py`, `frontend/src/auth/`, `keycloak/realm-import.json`
+Implementation: `backend/app/core/auth.py`, `backend/app/api/auth.py`, `backend/app/models/models.py`, `keycloak/realm-import.json`, `frontend/src/pages/Login.tsx`, `frontend/src/pages/Callback.tsx`, `frontend/src/hooks/useAuthStore.ts`, `frontend/src/api/client.ts`
 
-Tests: `backend/tests/test_auth.py`, `frontend/src/auth/AuthContext.test.tsx`
+Tests: `backend/tests/test_auth.py`, `frontend/src/App.test.tsx`
 
 ### audit-domain-engine — Multi-phase security audit domain engine
 

@@ -24,10 +24,29 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      sessionStorage.removeItem('access_token')
-      sessionStorage.removeItem('refresh_token')
-      window.location.href = '/login'
+    const originalRequest = error.config
+    if (error.response?.status === 401 && originalRequest && !originalRequest.url?.includes('/auth/refresh')) {
+      // Try to refresh the token
+      try {
+        const refreshResponse = await axios.post('/api/v1/auth/refresh', {}, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('access_token')}`,
+          },
+          withCredentials: true,
+        })
+        const newAccessToken = refreshResponse.data.access_token
+        sessionStorage.setItem('access_token', newAccessToken)
+        // Retry the original request with new token
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+        }
+        return api(originalRequest)
+      } catch {
+        // Refresh failed, redirect to login
+        sessionStorage.removeItem('access_token')
+        sessionStorage.removeItem('refresh_token')
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
