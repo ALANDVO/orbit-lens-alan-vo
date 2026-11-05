@@ -43,8 +43,7 @@ export function Callback() {
 
         const data = await tokenResponse.json()
         sessionStorage.setItem('access_token', data.access_token)
-        // Backend doesn't return refresh token in response (stored server-side or not exposed)
-        // For now we just use the access token
+        sessionStorage.setItem('refresh_token', data.refresh_token)
 
         sessionStorage.removeItem('oauth_state')
         sessionStorage.removeItem('code_verifier')

@@ -28,14 +28,20 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && originalRequest && !originalRequest.url?.includes('/auth/refresh')) {
       // Try to refresh the token
       try {
+        const refreshToken = sessionStorage.getItem('refresh_token')
+        if (!refreshToken) {
+          throw new Error('No refresh token available')
+        }
         const refreshResponse = await axios.post('/api/v1/auth/refresh', {}, {
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('access_token')}`,
+            Authorization: `Bearer ${refreshToken}`,
           },
           withCredentials: true,
         })
         const newAccessToken = refreshResponse.data.access_token
+        const newRefreshToken = refreshResponse.data.refresh_token
         sessionStorage.setItem('access_token', newAccessToken)
+        sessionStorage.setItem('refresh_token', newRefreshToken)
         // Retry the original request with new token
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`

@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.2.0 — work-in-progress checkpoint
+
+Partial code published for continued development. Known issues: STATUS.md.
+
+## 1.1.0 — work-in-progress checkpoint (auth-oidc: refresh token support)
+
+### Added
+- `backend/app/api/auth.py` — TokenResponse model now includes `refresh_token` field
+- `backend/app/api/auth.py` — Token exchange endpoint (`/api/v1/auth/token`) returns `refresh_token` for client-side storage
+- `backend/app/api/auth.py` — Refresh endpoint (`/api/v1/auth/refresh`) returns rotated `refresh_token` for token rotation
+- `frontend/src/pages/Callback.tsx` — Stores `refresh_token` in sessionStorage after successful token exchange
+- `frontend/src/api/client.ts` — Axios interceptor uses `refresh_token` for token refresh requests (was incorrectly using access_token)
+- `backend/tests/test_auth.py` — Added 4 new tests: token exchange returns refresh_token, refresh endpoint returns rotated tokens, invalid token rejected, access token rejected for refresh
+
+### Changed
+- Token exchange response now includes refresh_token alongside access_token
+- Token refresh response now includes new refresh_token for rotation
+
+### Fixed
+- Frontend token refresh now correctly uses refresh_token instead of access_token
+- Token rotation working properly on both token exchange and refresh
+
+### Tests
+- All 26 backend tests passing (13 audit + 13 auth)
+- 2 frontend tests passing
+
 ## 1.1.0 — work-in-progress checkpoint
 
 Partial code published for continued development. Known issues: STATUS.md.
@@ -7,11 +33,6 @@ Partial code published for continued development. Known issues: STATUS.md.
 ## 1.0.0 — work-in-progress checkpoint (auth-oidc improvements)
 
 Partial code published for continued development. Known issues: STATUS.md.
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.0.0] - 2026-10-29
 
