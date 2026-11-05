@@ -85,7 +85,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
-
+    refresh_token: str
 
 class UserResponse(BaseModel):
     id: int
@@ -164,6 +164,7 @@ async def token_exchange(
     return TokenResponse(
         access_token=internal_access,
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        refresh_token=internal_refresh,
     )
 
 
@@ -187,6 +188,7 @@ async def refresh_token(
     return TokenResponse(
         access_token=internal_access,
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        refresh_token=internal_refresh,
     )
 
 

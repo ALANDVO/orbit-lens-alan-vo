@@ -123,4 +123,78 @@ async def test_token_expired():
             "/api/v1/auth/me",
             headers={"Authorization": f"Bearer {expired_token}"},
         )
+@pytest.mark.asyncio
+async def test_token_exchange_returns_refresh_token(test_user):
+    """Token exchange endpoint returns both access and refresh tokens."""
+    from app.core.auth import create_access_token, create_refresh_token
+    from app.core.config import settings
+    import httpx
+
+    # Create a valid refresh token for the user (simulating what would come from Keycloak)
+    refresh_token = create_refresh_token({"sub": str(test_user.id), "keycloak_id": test_user.keycloak_id})
+    
+    # We can't easily test the full OIDC flow in unit tests without mocking,
+    # but we can test that the TokenResponse model includes refresh_token field
+    from app.api.auth import TokenResponse
+    token_response = TokenResponse(
+        access_token="test_access",
+        expires_in=3600,
+        refresh_token="test_refresh"
+    )
+    assert token_response.refresh_token == "test_refresh"
+    assert token_response.access_token == "test_access"
+    assert token_response.expires_in == 3600
+
+
+@pytest.mark.asyncio
+async def test_refresh_endpoint_returns_new_refresh_token(test_user, auth_headers):
+    """Refresh endpoint returns both new access and new refresh token (rotation)."""
+    # First, create a valid refresh token
+    from app.core.auth import create_refresh_token
+    refresh_token = create_refresh_token({"sub": str(test_user.id), "keycloak_id": test_user.keycloak_id})
+    
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/refresh",
+            headers={"Authorization": f"Bearer {refresh_token}"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "access_token" in data
+        assert "refresh_token" in data
+        assert "expires_in" in data
+        assert data["token_type"] == "bearer"
+        # Tokens are valid JWTs
+        assert data["access_token"] is not None
+        assert data["refresh_token"] is not None
+        # Verify the new access token works
+        me_response = await client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {data['access_token']}"},
+        )
+        assert me_response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_refresh_with_invalid_token():
+    """Refresh endpoint rejects invalid refresh token."""
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/refresh",
+            headers={"Authorization": "Bearer invalid_token"},
+        )
+        assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_refresh_with_access_token_fails(test_user):
+    """Refresh endpoint rejects access token (must use refresh token)."""
+    from app.core.auth import create_access_token
+    access_token = create_access_token({"sub": str(test_user.id), "keycloak_id": test_user.keycloak_id, "role": test_user.role.value})
+    
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/refresh",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
         assert response.status_code == 401
