@@ -76,3 +76,7 @@ Partial code published for continued development. Known issues: STATUS.md.
 - pyproject.toml with project metadata
 - portfolio.json for portfolio integration
 - LICENSE (MIT)
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

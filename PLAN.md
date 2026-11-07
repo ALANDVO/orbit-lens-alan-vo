@@ -116,3 +116,6 @@ Implementation: `README.md`, `CHANGELOG.md`, `portfolio.json`, `LICENSE`, `.gith
 
 Tests: `Full test suite passes`
 
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)
