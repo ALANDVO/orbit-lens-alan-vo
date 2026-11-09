@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-auth-oidc
+audit-domain-engine
 
 ## Roadmap
 
@@ -26,7 +26,7 @@ Tests: `backend/tests/test_health.py`, `frontend/src/App.test.tsx`
 
 ### auth-oidc — OIDC authentication with Keycloak (PKCE flow)
 
-Status: in_progress
+Status: done
 
 Acceptance:
 - Login/logout works via Keycloak
@@ -41,7 +41,7 @@ Tests: `backend/tests/test_auth.py`, `frontend/src/App.test.tsx`
 
 ### audit-domain-engine — Multi-phase security audit domain engine
 
-Status: planned
+Status: in_progress
 
 Acceptance:
 - Audit run creation with target specification

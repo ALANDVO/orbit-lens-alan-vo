@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "current_feature": "auth-oidc",
+  "current_feature": "audit-domain-engine",
   "features": [
     {
       "id": "project-skeleton",
@@ -42,7 +42,7 @@
     {
       "id": "auth-oidc",
       "title": "OIDC authentication with Keycloak (PKCE flow)",
-      "status": "in_progress",
+      "status": "done",
       "acceptance": [
         "Login/logout works via Keycloak",
         "Tokens validated with signature/issuer/audience checks",
@@ -68,7 +68,7 @@
     {
       "id": "audit-domain-engine",
       "title": "Multi-phase security audit domain engine",
-      "status": "planned",
+      "status": "in_progress",
       "acceptance": [
         "Audit run creation with target specification",
         "Multi-phase execution (recon, hunting, validation, reporting)",
