@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.main import app
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from app.core.auth import create_access_token, reset_oidc_cache
 from app.models import User, UserRole
 from app.core.config import settings
@@ -80,5 +80,14 @@ async def auth_headers(test_user):
 
 @pytest_asyncio.fixture(scope="function")
 async def client(test_db):
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
+
+@pytest_asyncio.fixture(scope="function")
+async def auth_client(test_user, client):
+    """Client with auth headers pre-configured."""
+    token = create_access_token({"sub": str(test_user.id), "keycloak_id": test_user.keycloak_id, "role": test_user.role.value})
+    client.headers.update({"Authorization": f"Bearer {token}"})
+    yield client
