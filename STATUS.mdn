@@ -1,0 +1,13 @@
+# Checkpoint status
+
+Work in progress; tests added for audit domain engine.
+
+## Outstanding findings
+
+- None new; previous items remain.
+
+## Completed this round
+
+- Implemented unit test for audit run creation (`backend/tests/test_audit_engine.py`).
+- Test passes: verifies `AuditEngine.create_audit .create_audit_run` creates a run with target specification and defaults.
+test line added
