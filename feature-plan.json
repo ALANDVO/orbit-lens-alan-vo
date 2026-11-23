@@ -85,7 +85,8 @@
       ],
       "tests": [
         "backend/tests/test_audit_engine.py",
-        "backend/tests/test_coverage.py"
+        "backend/tests/test_coverage.py",
+        "backend/tests/test_audit_api.py"
       ]
     },
     {
@@ -98,16 +99,8 @@
         "Deep audit profile (carried records, extended hunting)",
         "Export/import of audit runs"
       ],
-      "implementation": [
-        "backend/app/services/profiles.py",
-        "backend/app/api/workflows.py",
-        "frontend/src/components/audit/",
-        "frontend/src/pages/AuditDashboard.tsx"
-      ],
-      "tests": [
-        "backend/tests/test_workflows.py",
-        "frontend/src/pages/AuditDashboard.test.tsx"
-      ]
+      "implementation": [],
+      "tests": []
     },
     {
       "id": "llm-integration",
@@ -121,14 +114,8 @@
         "Configurable provider/model/endpoint",
         "Keys server-side only, redacted errors"
       ],
-      "implementation": [
-        "backend/app/services/llm_adapters.py",
-        "backend/app/core/llm_config.py",
-        "backend/app/api/llm.py"
-      ],
-      "tests": [
-        "backend/tests/test_llm_adapters.py"
-      ]
+      "implementation": [],
+      "tests": []
     },
     {
       "id": "frontend-dashboard",
@@ -141,14 +128,8 @@
         "Real-time progress updates",
         "Responsive professional UI"
       ],
-      "implementation": [
-        "frontend/src/pages/",
-        "frontend/src/components/",
-        "frontend/src/hooks/"
-      ],
-      "tests": [
-        "frontend/src/pages/*.test.tsx"
-      ]
+      "implementation": [],
+      "tests": []
     },
     {
       "id": "docs-and-ci",
@@ -163,17 +144,8 @@
         "API docs",
         "All tests pass"
       ],
-      "implementation": [
-        "README.md",
-        "CHANGELOG.md",
-        "portfolio.json",
-        "LICENSE",
-        ".github/workflows/ci.yml",
-        "docs/"
-      ],
-      "tests": [
-        "Full test suite passes"
-      ]
+      "implementation": [],
+      "tests": []
     }
   ]
 }

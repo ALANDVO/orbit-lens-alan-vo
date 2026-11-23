@@ -52,7 +52,7 @@ Acceptance:
 
 Implementation: `backend/app/models/audit.py`, `backend/app/services/audit_engine.py`, `backend/app/services/coverage.py`, `backend/app/api/audit.py`, `backend/app/services/validators.py`
 
-Tests: `backend/tests/test_audit_engine.py`, `backend/tests/test_coverage.py`
+Tests: `backend/tests/test_audit_engine.py`, `backend/tests/test_coverage.py`, `backend/tests/test_audit_api.py`
 
 ### audit-workflows — Three complete audit workflows
 
@@ -63,10 +63,6 @@ Acceptance:
 - Standard audit profile (multi-phase with verification)
 - Deep audit profile (carried records, extended hunting)
 - Export/import of audit runs
-
-Implementation: `backend/app/services/profiles.py`, `backend/app/api/workflows.py`, `frontend/src/components/audit/`, `frontend/src/pages/AuditDashboard.tsx`
-
-Tests: `backend/tests/test_workflows.py`, `frontend/src/pages/AuditDashboard.test.tsx`
 
 ### llm-integration — LLM provider adapters (optional advisory explanations)
 
@@ -80,10 +76,6 @@ Acceptance:
 - Configurable provider/model/endpoint
 - Keys server-side only, redacted errors
 
-Implementation: `backend/app/services/llm_adapters.py`, `backend/app/core/llm_config.py`, `backend/app/api/llm.py`
-
-Tests: `backend/tests/test_llm_adapters.py`
-
 ### frontend-dashboard — React dashboard with audit workflows
 
 Status: planned
@@ -94,10 +86,6 @@ Acceptance:
 - Typed API client from backend routes
 - Real-time progress updates
 - Responsive professional UI
-
-Implementation: `frontend/src/pages/`, `frontend/src/components/`, `frontend/src/hooks/`
-
-Tests: `frontend/src/pages/*.test.tsx`
 
 ### docs-and-ci — Documentation, CI/CD, and portfolio.json
 
@@ -111,10 +99,6 @@ Acceptance:
 - GitHub Actions CI workflow
 - API docs
 - All tests pass
-
-Implementation: `README.md`, `CHANGELOG.md`, `portfolio.json`, `LICENSE`, `.github/workflows/ci.yml`, `docs/`
-
-Tests: `Full test suite passes`
 
 ---
 
