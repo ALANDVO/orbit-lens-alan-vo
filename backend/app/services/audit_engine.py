@@ -239,6 +239,29 @@ class AuditEngine:
                     if f.endswith((".py", ".js", ".ts", ".tsx", ".jsx", ".json", ".yaml", ".yml", ".toml", ".md")):
                         files.append(os.path.join(root, f))
             return files[:100]
+        elif target_type == "git":
+            # For git targets, discover tracked Python/source files
+            # In a real implementation, this would use git ls-files or similar
+            import os
+            files = []
+            for root, dirs, filenames in os.walk(target_path):
+                # Skip common non-source directories
+                dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["node_modules", "__pycache__", "dist", "build"]]
+                for f in filenames:
+                    if f.endswith((".py", ".js", ".ts", ".tsx", ".jsx", ".json", ".yaml", ".yml", ".toml", ".md")):
+                        files.append(os.path.join(root, f))
+            return files[:100]
+        elif target_type == "archive":
+            # For archive targets, discover files within archive formats
+            import os
+            files = []
+            valid_extensions = ('.py', '.js', '.ts', '.tsx', '.jsx', '.json', '.yaml', '.yml', '.toml', '.md')
+            for root, dirs, filenames in os.walk(target_path):
+                dirs[:] = [d for d in dirs if not d.startswith(".")]
+                for f in filenames:
+                    if f.endswith(valid_extensions):
+                        files.append(os.path.join(root, f))
+            return files[:100]
         return [target_path]
 
     def _generate_invariants(self, files: List[str], profile: AuditProfile) -> List[tuple]:
